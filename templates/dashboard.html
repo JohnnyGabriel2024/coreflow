@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3 class="mb-4">📊 Dashboard</h3>
+
+<div class="row mb-4">
+
+    <div class="col-12 col-md-4 mb-3">
+        <div class="card p-3 text-center">
+            <h6 class="text-muted">💰 Total Ventas</h6>
+            <h4>{{ total_ventas | clp }}</h4>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4 mb-3">
+        <div class="card p-3 text-center">
+            <h6 class="text-muted">📈 Ticket Promedio</h6>
+            <h4>{{ ticket_promedio | clp }}</h4>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4 mb-3">
+        <div class="card p-3 text-center">
+            <h6 class="text-muted">🏆 Mejor Cliente</h6>
+            <h4>{{ mejor_cliente }}</h4>
+        </div>
+    </div>
+
+</div>
+
+<!-- KPIs -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card text-bg-primary p-3">
+            <h5>Total Clientes</h5>
+            <h2>{{ total_clientes }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card text-bg-success p-3">
+            <h5>Total Interacciones</h5>
+            <h2>{{ total_interacciones }}</h2>
+        </div>
+    </div>
+</div>
+
+<!-- GRÁFICOS -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5>💰 Ventas por Cliente</h5>
+            <canvas id="ventasChart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5>📊 Interacciones por Tipo</h5>
+            <canvas id="interaccionesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ÚLTIMAS INTERACCIONES -->
+<<div class="mt-5">
+    <h5>📝 Últimas Interacciones</h5>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <tr>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Nota</th>
+                <th>Fecha</th>
+            </tr>
+
+            {% for i in interacciones_recientes %}
+            <tr>
+                <td>{{ i.cliente.nombre }}</td>
+                <td>{{ i.tipo }}</td>
+                <td>{{ i.nota }}</td>
+                <td>{{ i.fecha | fecha }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<!-- 🔥 SCRIPT DENTRO DEL BLOCK -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const labelsVentas = {{ clientes_labels | tojson }};
+    const dataVentas = {{ ventas_data | tojson }};
+
+    const labelsTipos = {{ tipos_labels | tojson }};
+    const dataTipos = {{ tipos_data | tojson }};
+
+    if (labelsVentas.length > 0) {
+        new Chart(document.getElementById('ventasChart'), {
+            type: 'bar',
+            data: {
+                labels: labelsVentas,
+                datasets: [{
+                    label: 'Ventas ($)',
+                    data: dataVentas
+                }]
+            }
+        });
+    }
+
+    if (labelsTipos.length > 0) {
+        new Chart(document.getElementById('interaccionesChart'), {
+            type: 'pie',
+            data: {
+                labels: labelsTipos,
+                datasets: [{
+                    data: dataTipos
+                }]
+            }
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

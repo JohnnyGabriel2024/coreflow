@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>📦 Gestión de Productos</h3>
+
+<!-- FORMULARIO -->
+<form method="POST" class="mb-4">
+    <input class="form-control mb-2" name="nombre" placeholder="Nombre" required>
+    <input class="form-control mb-2" name="precio" placeholder="Precio" type="number" step="0.01" required>
+    <input class="form-control mb-2" name="stock" placeholder="Stock" type="number" required>
+
+    <button class="btn btn-success">Guardar</button>
+</form>
+
+<hr>
+
+<!-- LISTADO -->
+<h5>Productos existentes</h5>
+
+<table class="table table-striped">
+    <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Precio</th>
+        <th>Stock</th>
+    </tr>
+
+    {% for p in productos %}
+    <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.nombre }}</td>
+        <td>{{ p.precio | clp }}</td>
+        <td>{{ p.stock }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endblock %}

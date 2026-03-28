@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h3>Nueva Venta</h3>
+
+<form method="POST">
+
+    <label>Cliente</label>
+    <select class="form-select mb-3" name="cliente_id">
+        {% for c in clientes %}
+        <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+    </select>
+
+    <h5>Productos</h5>
+
+    {% for p in productos %}
+    <div class="row mb-2">
+        <div class="col-md-6">
+            {{ p.nombre }} ({{ p.precio | clp }})
+            <input type="hidden" name="producto_id" value="{{ p.id }}">
+        </div>
+        <div class="col-md-6">
+            <input type="number" name="cantidad" class="form-control" placeholder="Cantidad">
+        </div>
+    </div>
+    {% endfor %}
+
+    <button class="btn btn-primary">Registrar Venta</button>
+</form>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>🧾 Detalle de Venta #{{ venta.id }}</h3>
+
+<p><strong>Cliente:</strong> {{ venta.cliente.nombre }}</p>
+<p><strong>Fecha:</strong> {{ venta.fecha | fecha }}</p>
+<p><strong>Total:</strong> {{ venta.total | clp }}</p>
+
+<h5>Productos</h5>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Subtotal</th>
+        </tr>
+
+        {% for d in venta.detalles %}
+        <tr>
+            <td>{{ d.producto.nombre }}</td>
+            <td>{{ d.cantidad }}</td>
+            <td>{{ d.precio_unitario | clp }}</td>
+            <td>{{ (d.cantidad * d.precio_unitario) | clp }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

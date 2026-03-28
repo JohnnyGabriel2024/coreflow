@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3 class="mb-4">💰 Ventas Registradas</h3>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Total</th>
+            <th>Fecha</th>
+        </tr>
+
+        {% for v in ventas %}
+        <tr>
+            <td>
+                <a href="{{ url_for('detalle_venta', id=v.id) }}">
+                    {{ v.id }}
+                </a>
+            </td>
+            <td>{{ v.cliente.nombre }}</td>
+            <td>{{ v.total | clp }}</td>
+            <td>{{ v.fecha | fecha }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

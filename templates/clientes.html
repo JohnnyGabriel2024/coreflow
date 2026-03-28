@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>Clientes</h3>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+        </tr>
+
+        {% for c in clientes %}
+        <tr>
+            <td>{{ c.id }}</td>
+            <td>
+                <a href="{{ url_for('cliente_detalle', id=c.id) }}">
+                    {{ c.nombre }}
+                </a>
+            </td>
+            <td>{{ c.email }}</td>
+            <td>{{ c.telefono }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,58 @@
+/* 🎨 Fondo general */
+body {
+    background-color: #f4f7fb;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 📦 Contenedor principal */
+.container {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 🧭 Navbar */
+nav {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* 🔘 Botones */
+.btn {
+    border-radius: 8px;
+}
+
+/* 🧾 Tablas */
+.table {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: #f1f3f6;
+    font-weight: 600;
+}
+
+/* 🧠 Títulos */
+h2, h3 {
+    font-weight: 600;
+}
+
+/* 📊 Cards (dashboard) */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* ✨ Inputs */
+.form-control, .form-select {
+    border-radius: 8px;
+}
+
+/* 🔗 Links */
+a {
+    text-decoration: none;
+}

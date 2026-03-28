@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="POST">
+    <input class="form-control mb-2" name="nombre" placeholder="Nombre" required>
+    <input class="form-control mb-2" name="email" placeholder="Email">
+    <input class="form-control mb-2" name="telefono" placeholder="Teléfono">
+    <input class="form-control mb-2" name="empresa" placeholder="Empresa">
+    <button class="btn btn-success">Guardar</button>
+</form>
+{% endblock %}
