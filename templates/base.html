@@ -33,13 +33,20 @@
 
         <!-- Menú -->
         <div class="collapse navbar-collapse" id="navbarNav">
-            <div class="ms-auto d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0">
+            <div class="ms-auto d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0 align-items-lg-center">
 
                 <a href="{{ url_for('index') }}" class="btn btn-light">👤 Clientes</a>
                 <a href="{{ url_for('dashboard') }}" class="btn btn-light">📊 Dashboard</a>
                 <a href="{{ url_for('nuevo_producto') }}" class="btn btn-light">📦 Productos</a>
                 <a href="{{ url_for('nueva_venta') }}" class="btn btn-light">💰 Venta</a>
                 <a href="{{ url_for('listar_ventas') }}" class="btn btn-light">📄 Ventas</a>
+
+                {% if current_user.is_authenticated %}
+                <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0 ms-lg-2 ps-lg-2 border-lg-start">
+                    <span class="badge bg-info text-dark">{{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">🚪 Salir</a>
+                </div>
+                {% endif %}
 
             </div>
         </div>

@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import os
 
 from database import db
-from models import Cliente, Interaccion, Producto, Venta, DetalleVenta
+from models import Cliente, Interaccion, Producto, Venta, DetalleVenta, Usuario
 
 app = Flask(__name__)
 
@@ -12,17 +13,26 @@ DB_PATH = os.environ.get("DB_PATH", os.path.join(INSTANCE_DIR, 'crm.db'))
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 db.init_app(app)
+
+# 🔐 Configurar Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor inicia sesión para continuar.'
+login_manager.login_message_category = 'info'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
 
 os.makedirs(INSTANCE_DIR, exist_ok=True)
 
 with app.app_context():
-    if not os.path.exists(DB_PATH):
-        print("🆕 Creando base de datos...")
-        db.create_all()
-    else:
-        print("📦 Base de datos existente detectada. No se modifica.")
+    # Crear todas las tablas si no existen (idempotente)
+    db.create_all()
 
     # Migración ligera: agregar columnas faltantes en productos (sin perder datos)
     con = db.session.connection()
@@ -63,16 +73,54 @@ def format_fecha(value):
 
 
 # =========================
+# RUTAS DE AUTENTICACIÓN
+# =========================
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        contrasena = request.form.get('contrasena', '').strip()
+        
+        if not username or not contrasena:
+            flash('Usuario y contraseña son requeridos.', 'error')
+            return redirect(url_for('login'))
+        
+        usuario = Usuario.query.filter_by(username=username).first()
+        
+        if usuario and usuario.verificar_contrasena(contrasena) and usuario.activo:
+            login_user(usuario, remember=request.form.get('recuerdame'))
+            return redirect(url_for('index'))
+        else:
+            flash('Usuario o contraseña incorrectos.', 'error')
+    
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Sesión cerrada exitosamente.', 'success')
+    return redirect(url_for('login'))
+
+
+# =========================
 # ROUTES
 # =========================
 
 @app.route('/')
+@login_required
 def index():
     clientes = Cliente.query.order_by(Cliente.fecha_creacion.desc()).all()
     return render_template('clientes.html', clientes=clientes)
 
 
 @app.route('/cliente/nuevo', methods=['GET', 'POST'])
+@login_required
 def nuevo_cliente():
     if request.method == 'POST':
         cliente = Cliente(
@@ -89,12 +137,14 @@ def nuevo_cliente():
 
 
 @app.route('/cliente/<int:id>')
+@login_required
 def cliente_detalle(id):
     cliente = Cliente.query.get_or_404(id)
     return render_template('cliente_detalle.html', cliente=cliente)
 
 
 @app.route('/cliente/<int:id>/interaccion/nuevo', methods=['GET'])
+@login_required
 def nueva_interaccion(id):
     cliente = Cliente.query.get_or_404(id)
     tipos = ['llamada', 'email', 'reunión', 'nota', 'otro']
@@ -102,6 +152,7 @@ def nueva_interaccion(id):
 
 
 @app.route('/cliente/<int:id>/interaccion', methods=['POST'])
+@login_required
 def agregar_interaccion(id):
     cliente = Cliente.query.get_or_404(id)
     tipo = request.form.get('tipo', '').strip()
@@ -122,6 +173,7 @@ def agregar_interaccion(id):
 
     return redirect(url_for('cliente_detalle', id=id))
 
+@login_required
 
 @app.route('/dashboard')
 def dashboard():
@@ -183,6 +235,7 @@ def dashboard():
 
 
 @app.route('/producto/nuevo', methods=['GET', 'POST'])
+@login_required
 def nuevo_producto():
     if request.method == 'POST':
         sku = request.form.get('sku', '').strip() or None
@@ -229,6 +282,7 @@ def nuevo_producto():
 
 
 @app.route('/venta/nueva', methods=['GET', 'POST'])
+@login_required
 def nueva_venta():
     clientes = Cliente.query.all()
     productos = Producto.query.all()
@@ -289,12 +343,14 @@ def nueva_venta():
 
 
 @app.route('/ventas')
+@login_required
 def listar_ventas():
     ventas = Venta.query.order_by(Venta.fecha.desc()).all()
     return render_template('ventas.html', ventas=ventas)
 
 
 @app.route('/venta/<int:id>')
+@login_required
 def detalle_venta(id):
     venta = Venta.query.get_or_404(id)
     return render_template('venta_detalle.html', venta=venta)
