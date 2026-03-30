@@ -4,11 +4,23 @@
 
 <h3>📦 Gestión de Productos</h3>
 
+<!-- FILTRO -->
+<form method="GET" class="mb-3 d-flex gap-2">
+    <input class="form-control" name="filtro" placeholder="Buscar por nombre, SKU, categoría" value="{{ filtro or '' }}">
+    <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('nuevo_producto') }}">Limpiar</a>
+</form>
+
 <!-- FORMULARIO -->
 <form method="POST" class="mb-4">
+    <input class="form-control mb-2" name="sku" placeholder="SKU">
     <input class="form-control mb-2" name="nombre" placeholder="Nombre" required>
+    <input class="form-control mb-2" name="categoria" placeholder="Categoría">
+    <input class="form-control mb-2" name="unidad_medida" placeholder="Unidad de medida" value="u">
     <input class="form-control mb-2" name="precio" placeholder="Precio" type="number" step="0.01" required>
     <input class="form-control mb-2" name="stock" placeholder="Stock" type="number" required>
+    <input class="form-control mb-2" name="stock_minimo" placeholder="Stock mínimo" type="number" value="0">
+    <textarea class="form-control mb-2" name="descripcion" placeholder="Descripción" rows="2"></textarea>
 
     <button class="btn btn-success">Guardar</button>
 </form>
@@ -22,16 +34,26 @@
     <tr>
         <th>ID</th>
         <th>Nombre</th>
+        <th>SKU</th>
+        <th>Categoría</th>
         <th>Precio</th>
         <th>Stock</th>
+        <th>Stock mínimo</th>
+        <th>Estado</th>
+        <th>Bajo stock</th>
     </tr>
 
     {% for p in productos %}
-    <tr>
+    <tr {% if p.esta_bajo_stock() %}class="table-warning"{% endif %}>
         <td>{{ p.id }}</td>
         <td>{{ p.nombre }}</td>
+        <td>{{ p.sku or '-' }}</td>
+        <td>{{ p.categoria or '-' }}</td>
         <td>{{ p.precio | clp }}</td>
         <td>{{ p.stock }}</td>
+        <td>{{ p.stock_minimo }}</td>
+        <td>{{ p.estado }}</td>
+        <td>{% if p.esta_bajo_stock() %}Sí{% else %}No{% endif %}</td>
     </tr>
     {% endfor %}
 

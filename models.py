@@ -35,9 +35,19 @@ class Producto(db.Model):
     __tablename__ = 'productos'
 
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
+    sku = db.Column(db.String(50), unique=True, nullable=True)
+    nombre = db.Column(db.String(100), nullable=False, index=True)
+    descripcion = db.Column(db.Text)
+    categoria = db.Column(db.String(80), index=True)
+    unidad_medida = db.Column(db.String(20), default='u')
     precio = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0)
+    stock_minimo = db.Column(db.Integer, default=0)
+    estado = db.Column(db.String(20), default='activo')
+    fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def esta_bajo_stock(self):
+        return self.stock <= self.stock_minimo
 
 
 # =========================

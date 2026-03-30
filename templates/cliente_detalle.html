@@ -7,6 +7,12 @@
 <p><strong>Email:</strong> {{ cliente.email }}</p>
 <p><strong>Teléfono:</strong> {{ cliente.telefono }}</p>
 
+<p>
+  <a href="{{ url_for('nueva_interaccion', id=cliente.id) }}" class="btn btn-sm btn-success">
+    + Agregar interacción
+  </a>
+</p>
+
 <h5>Interacciones</h5>
 
 <div class="table-responsive">

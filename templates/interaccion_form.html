@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Agregar interacción para {{ cliente.nombre }}</h3>
+
+<form action="{{ url_for('agregar_interaccion', id=cliente.id) }}" method="post">
+  <div class="mb-3">
+    <label for="tipo" class="form-label">Tipo</label>
+    <select class="form-select" name="tipo" id="tipo" required>
+      <option value="" disabled selected>Seleccione tipo</option>
+      {% for t in tipos %}
+      <option value="{{ t }}">{{ t.capitalize() }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="nota" class="form-label">Nota</label>
+    <textarea class="form-control" name="nota" id="nota" rows="4" required></textarea>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Guardar</button>
+  <a href="{{ url_for('cliente_detalle', id=cliente.id) }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

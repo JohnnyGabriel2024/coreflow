@@ -24,6 +24,29 @@ with app.app_context():
     else:
         print("📦 Base de datos existente detectada. No se modifica.")
 
+    # Migración ligera: agregar columnas faltantes en productos (sin perder datos)
+    con = db.session.connection()
+    from sqlalchemy import text
+
+    cols = {row[1] for row in con.execute(text("PRAGMA table_info(productos)"))}
+    adds = [
+        ("sku", "TEXT"),
+        ("descripcion", "TEXT"),
+        ("categoria", "TEXT"),
+        ("unidad_medida", "TEXT"),
+        ("stock_minimo", "INTEGER"),
+        ("estado", "TEXT"),
+        ("fecha_actualizacion", "DATETIME"),
+    ]
+    for col_name, col_type in adds:
+        if col_name not in cols:
+            default = "'activo'" if col_name == 'estado' else "0" if col_name == 'stock_minimo' else "'u'" if col_name == 'unidad_medida' else None
+            stmt = f"ALTER TABLE productos ADD COLUMN {col_name} {col_type}"
+            if default is not None:
+                stmt += f" DEFAULT {default}"
+            con.execute(text(stmt))
+    db.session.commit()
+
 
 # =========================
 # 🔥 FILTROS
@@ -71,14 +94,27 @@ def cliente_detalle(id):
     return render_template('cliente_detalle.html', cliente=cliente)
 
 
+@app.route('/cliente/<int:id>/interaccion/nuevo', methods=['GET'])
+def nueva_interaccion(id):
+    cliente = Cliente.query.get_or_404(id)
+    tipos = ['llamada', 'email', 'reunión', 'nota', 'otro']
+    return render_template('interaccion_form.html', cliente=cliente, tipos=tipos)
+
+
 @app.route('/cliente/<int:id>/interaccion', methods=['POST'])
 def agregar_interaccion(id):
     cliente = Cliente.query.get_or_404(id)
+    tipo = request.form.get('tipo', '').strip()
+    nota = request.form.get('nota', '').strip()
+
+    if not tipo or not nota:
+        # Se puede mejorar con flash, por ahora re-envía al formulario
+        return redirect(url_for('nueva_interaccion', id=id))
 
     interaccion = Interaccion(
         cliente_id=cliente.id,
-        tipo=request.form.get('tipo'),
-        nota=request.form.get('nota')
+        tipo=tipo,
+        nota=nota
     )
 
     db.session.add(interaccion)
@@ -149,17 +185,47 @@ def dashboard():
 @app.route('/producto/nuevo', methods=['GET', 'POST'])
 def nuevo_producto():
     if request.method == 'POST':
+        sku = request.form.get('sku', '').strip() or None
+        nombre = request.form.get('nombre', '').strip()
+        descripcion = request.form.get('descripcion', '').strip()
+        categoria = request.form.get('categoria', '').strip()
+        unidad_medida = request.form.get('unidad_medida', 'u').strip()
+        precio = float(request.form.get('precio', 0) or 0)
+        stock = int(request.form.get('stock', 0) or 0)
+        stock_minimo = int(request.form.get('stock_minimo', 0) or 0)
+
+        if not nombre or precio < 0 or stock < 0:
+            return redirect(url_for('nuevo_producto'))
+
         producto = Producto(
-            nombre=request.form['nombre'],
-            precio=float(request.form['precio']),
-            stock=int(request.form['stock'])
+            sku=sku,
+            nombre=nombre,
+            descripcion=descripcion,
+            categoria=categoria,
+            unidad_medida=unidad_medida,
+            precio=precio,
+            stock=stock,
+            stock_minimo=stock_minimo,
+            estado='activo'
         )
+
         db.session.add(producto)
         db.session.commit()
         return redirect(url_for('nuevo_producto'))
 
-    productos = Producto.query.all()
-    return render_template('producto_form.html', productos=productos)
+    filtro = request.args.get('filtro', '').strip()
+    if filtro:
+        productos = Producto.query.filter(
+            db.or_(
+                Producto.nombre.ilike(f"%{filtro}%"),
+                Producto.sku.ilike(f"%{filtro}%"),
+                Producto.categoria.ilike(f"%{filtro}%")
+            )
+        ).all()
+    else:
+        productos = Producto.query.all()
+
+    return render_template('producto_form.html', productos=productos, filtro=filtro)
 
 
 @app.route('/venta/nueva', methods=['GET', 'POST'])
@@ -189,6 +255,14 @@ def nueva_venta():
 
             if cantidad > 0:
                 producto = Producto.query.get(int(productos_ids[i]))
+                if not producto or producto.estado != 'activo':
+                    continue
+
+                if cantidad > producto.stock:
+                    db.session.rollback()
+                    return "Stock insuficiente para {}".format(producto.nombre), 400
+
+                producto.stock -= cantidad
 
                 subtotal = producto.precio * cantidad
                 total += subtotal
